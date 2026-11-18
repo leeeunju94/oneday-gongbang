@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       const users = (data.users || []).map((u) => ({ email: u.email, created_at: u.created_at, last_sign_in_at: u.last_sign_in_at }));
       return res.status(200).json({ users });
     }
-    const r = await fetch(`${SB_URL}/rest/v1/inquiries?select=*&order=created_at.desc&limit=500`, { headers: sbHeaders() });
+    const r = await fetch(`${SB_URL}/rest/v1/gongbang_inquiries?select=*&order=created_at.desc&limit=500`, { headers: sbHeaders() });
     if (!r.ok) return res.status(500).json({ error: '불러오지 못했어요.' });
     return res.status(200).json({ rows: await r.json() });
   }
@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
     if (typeof b === 'string') { try { b = JSON.parse(b); } catch { b = {}; } }
     const id = Number(b.id);
     if (!Number.isInteger(id) || !STATUSES.includes(b.status)) return res.status(400).json({ error: '잘못된 요청이에요.' });
-    const r = await fetch(`${SB_URL}/rest/v1/inquiries?id=eq.${id}`, {
+    const r = await fetch(`${SB_URL}/rest/v1/gongbang_inquiries?id=eq.${id}`, {
       method: 'PATCH', headers: { ...sbHeaders(), Prefer: 'return=minimal' },
       body: JSON.stringify({ status: b.status, updated_at: new Date().toISOString() }),
     });
