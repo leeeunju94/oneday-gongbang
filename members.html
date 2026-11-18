@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>회원 전용 | 원데이 클래스 공방</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;600&family=Noto+Serif+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="page-glow" aria-hidden="true"></div>
+  <header class="wrap top glass"><a class="brand" href="/">원데이 클래스 공방</a><nav><button class="btn btn-ghost btn-small" id="out" type="button">로그아웃</button></nav></header>
+  <main class="narrow">
+    <h1>회원 전용 안내</h1>
+    <p class="sub" id="who">확인하는 중이에요…</p>
+    <div class="reviews-empty" id="content" hidden></div>
+    <p style="margin-top:28px"><a class="btn" href="/#quote">견적 요청하기</a></p>
+  </main>
+  <script src="/auth.js"></script>
+  <script>
+    const token = Auth.token();
+    if (!token) location.replace('/login.html');
+    (async () => {
+      const r = await fetch('/api/members', { headers: { Authorization: `Bearer ${token}` } });
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 401) { Auth.save(''); location.replace('/login.html'); return; }
+      if (!r.ok) { document.getElementById('who').textContent = d.error || '불러오지 못했어요.'; return; }
+      document.getElementById('who').textContent = `${d.email} 으로 로그인했어요.`;
+      const c = document.getElementById('content'); c.textContent = d.content; c.hidden = false;
+    })();
+    document.getElementById('out').addEventListener('click', async () => {
+      try { await Auth.call('logout', null, token); } catch {}
+      Auth.save(''); location.href = '/';
+    });
+  </script>
+</body>
+</html>

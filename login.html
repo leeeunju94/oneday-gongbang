@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>로그인 | 원데이 클래스 공방</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;600&family=Noto+Serif+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="page-glow" aria-hidden="true"></div>
+  <header class="wrap top glass"><a class="brand" href="/">원데이 클래스 공방</a><nav><a href="/signup.html">회원가입</a></nav></header>
+  <main class="narrow">
+    <h1>로그인</h1>
+    <p class="sub">회원 전용 안내를 보려면 로그인해 주세요.</p>
+    <form class="form glass" id="f" novalidate>
+      <div class="field"><label for="email">이메일</label><input id="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="pw">비밀번호</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit" id="btn">로그인</button>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    </form>
+    <div class="links">
+      <a href="/signup.html">처음이에요, 가입할게요</a>
+      <a href="#" id="forgot">비밀번호를 잊었어요</a>
+    </div>
+  </main>
+  <script src="/auth.js"></script>
+  <script>
+    const f = document.getElementById('f'), msg = document.getElementById('msg'), btn = document.getElementById('btn');
+    if (Auth.token()) location.replace('/members.html');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = f.email.value.trim(), password = f.pw.value;
+      if (!email || !password) return showMsg(msg, '이메일과 비밀번호를 적어 주세요.');
+      btn.disabled = true;
+      try {
+        const r = await Auth.call('token?grant_type=password', { email, password });
+        if (r.ok && r.data.access_token) { Auth.save(r.data.access_token); location.href = '/members.html'; return; }
+        const t = String(r.data.msg || r.data.error_description || r.data.error_code || '');
+        showMsg(msg, /confirm/i.test(t) ? '가입 확인 메일의 링크를 먼저 눌러 주세요.' : '이메일 또는 비밀번호가 맞지 않아요.');
+        f.pw.value = ''; f.pw.focus();
+      } catch (err) { showMsg(msg, err.message); }
+      finally { btn.disabled = false; }
+    });
+    document.getElementById('forgot').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = f.email.value.trim();
+      if (!email) { showMsg(msg, '위에 이메일을 먼저 적고 다시 눌러 주세요.'); f.email.focus(); return; }
+      try { await Auth.call('recover', { email }); showMsg(msg, '메일을 확인해 주세요. 비밀번호를 다시 정하는 링크를 보냈어요.', true); }
+      catch (err) { showMsg(msg, err.message); }
+    });
+  </script>
+</body>
+</html>
